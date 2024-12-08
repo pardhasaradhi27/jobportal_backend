@@ -4,25 +4,27 @@ FROM openjdk:17-jdk-slim
 # Set the working directory inside the container
 WORKDIR /app
 
-# Copy Maven wrapper and pom.xml into the container
+# Copy the Maven wrapper scripts and configuration
 COPY .mvn/ .mvn
 COPY mvnw .
+
+# Set execute permission for the Maven wrapper script
+RUN chmod +x mvnw
+
+# Copy the Maven POM file
 COPY pom.xml .
 
 # Download dependencies to speed up subsequent builds
 RUN ./mvnw dependency:go-offline -B
 
 # Copy the source code into the container
-COPY src ./src
+COPY src/ src/
 
-# Build the JAR file
-RUN ./mvnw clean package -DskipTests
-
-# Copy the packaged JAR file to the final location
-RUN mv target/*.jar app.jar
+# Package the application
+RUN ./mvnw package -DskipTests
 
 # Expose the port your app runs on
 EXPOSE 8080
 
 # Run the Spring Boot application
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-jar", "target/jobportal-0.0.1-SNAPSHOT.jar"]
